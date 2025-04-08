@@ -1,3 +1,4 @@
+import { getContract } from 'wagmi/actions';
 import { ethers } from 'ethers';
 import contractConfig from './contractConfig.json';
 
@@ -5,14 +6,24 @@ import contractConfig from './contractConfig.json';
 const { contracts } = contractConfig;
 
 // Contract ABIs and addresses from deployment
-const ProjectListingABI = contracts.ProjectListing.abi;
-const DonateABI = contracts.Donate.abi;
-const DAOABI = contracts.DAO.abi;
-
 const CONTRACT_ADDRESSES = {
     ProjectListing: contracts.ProjectListing.address,
     Donate: contracts.Donate.address,
     DAO: contracts.DAO.address,
+};
+
+export const getContractInstance = (contractName, signer = null) => {
+  if (!contractConfig.contracts[contractName]) {
+    throw new Error(`Contract ${contractName} not found in config`);
+  }
+
+  const config = contractConfig.contracts[contractName];
+  return getContract({
+    address: config.address,
+    abi: config.abi,
+    walletClient: signer,
+    chainId: 421614 // Arbitrum Sepolia chain ID
+  });
 };
 
 export const getWeb3Provider = async () => {
@@ -32,20 +43,8 @@ export const getContracts = async (provider) => {
     const signer = await provider.getSigner();
     
     return {
-        projectListing: new ethers.Contract(
-            CONTRACT_ADDRESSES.ProjectListing,
-            ProjectListingABI,
-            signer
-        ),
-        donate: new ethers.Contract(
-            CONTRACT_ADDRESSES.Donate,
-            DonateABI,
-            signer
-        ),
-        dao: new ethers.Contract(
-            CONTRACT_ADDRESSES.DAO,
-            DAOABI,
-            signer
-        ),
+        projectListing: getContractInstance('ProjectListing', signer),
+        donate: getContractInstance('Donate', signer),
+        dao: getContractInstance('DAO', signer),
     };
 };

@@ -1,7 +1,7 @@
 {
   "contracts": {
     "ProjectListing": {
-      "address": "0x01D0CfEb9ecDc082839503Ae92BE26E16cA1d1dd",
+      "address": "0xf03abe69D97bbc624DB4AE07C5dbddEaD412eF42",
       "subscriptionFee": "0.01",
       "abi": [
         {
@@ -422,7 +422,7 @@
               "type": "address"
             }
           ],
-          "name": "setDAOContract",
+          "name": "setDaoContract",
           "outputs": [],
           "stateMutability": "nonpayable",
           "type": "function"
@@ -469,7 +469,7 @@
       ]
     },
     "DAO": {
-      "address": "0x7599D04ABad613d2D4A853d60066bb34F19013c9",
+      "address": "0x82b9ccAEC5F37FB71EE59fF246ca276F2aFC5768",
       "minStakeAmount": "0.01",
       "abi": [
         {
@@ -664,32 +664,17 @@
         {
           "inputs": [
             {
-              "internalType": "uint256",
-              "name": "projectId",
-              "type": "uint256"
+              "internalType": "address",
+              "name": "account",
+              "type": "address"
             }
           ],
-          "name": "getProjectRequest",
+          "name": "getMemberStake",
           "outputs": [
             {
               "internalType": "uint256",
-              "name": "yesVotes",
+              "name": "",
               "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "noVotes",
-              "type": "uint256"
-            },
-            {
-              "internalType": "bool",
-              "name": "isApproved",
-              "type": "bool"
-            },
-            {
-              "internalType": "bool",
-              "name": "isProcessed",
-              "type": "bool"
             }
           ],
           "stateMutability": "view",
@@ -709,6 +694,25 @@
             }
           ],
           "name": "hasVoted",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "account",
+              "type": "address"
+            }
+          ],
+          "name": "isMember",
           "outputs": [
             {
               "internalType": "bool",
@@ -901,6 +905,19 @@
           "inputs": [
             {
               "internalType": "address",
+              "name": "_projectListingContract",
+              "type": "address"
+            }
+          ],
+          "name": "setProjectListingContract",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
               "name": "newOwner",
               "type": "address"
             }
@@ -914,42 +931,16 @@
           "inputs": [
             {
               "internalType": "uint256",
-              "name": "newAmount",
-              "type": "uint256"
-            }
-          ],
-          "name": "updateMinStakeAmount",
-          "outputs": [],
-          "stateMutability": "nonpayable",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "newProjectListingContract",
-              "type": "address"
-            }
-          ],
-          "name": "updateProjectListingContract",
-          "outputs": [],
-          "stateMutability": "nonpayable",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "uint256",
               "name": "projectId",
               "type": "uint256"
             },
             {
               "internalType": "bool",
-              "name": "vote",
+              "name": "voteInFavor",
               "type": "bool"
             }
           ],
-          "name": "vote",
+          "name": "voteOnProject",
           "outputs": [],
           "stateMutability": "nonpayable",
           "type": "function"
@@ -957,7 +948,7 @@
       ]
     },
     "Donate": {
-      "address": "0x1c7E794B14d51DbB80D7b73c25EFcF60DcEF1aF9",
+      "address": "0x368Aeb2834d445F0BC2264a51feE0d6a7Bd07526",
       "abi": [
         {
           "inputs": [
@@ -1311,6 +1302,32 @@
         {
           "inputs": [],
           "name": "renounceOwnership",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_daoContract",
+              "type": "address"
+            }
+          ],
+          "name": "setDaoContract",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_projectListingContract",
+              "type": "address"
+            }
+          ],
+          "name": "setProjectListingContract",
           "outputs": [],
           "stateMutability": "nonpayable",
           "type": "function"

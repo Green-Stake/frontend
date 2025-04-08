@@ -139,44 +139,46 @@ export default function Profile() {
 
   if (!isConnected) {
     return (
-      <div className="text-center py-20">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">Connect Your Wallet</h1>
-        <p className="text-gray-600">Please connect your wallet to view your profile.</p>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-green-700 mb-4">Connect Your Wallet</h1>
+          <p className="text-gray-600">Please connect your wallet to view your profile.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-8">Profile</h1>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold text-green-700 mb-8">Profile</h1>
 
       {/* User Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-600">Projects Listed</h3>
-          <p className="text-3xl font-bold text-green-600">{userStats.projectsListed}</p>
+          <h2 className="text-2xl font-bold text-green-700 mb-4">Projects Listed</h2>
+          <p className="text-3xl font-bold text-green-700">{userStats.projectsListed}</p>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-600">Total Donations</h3>
-          <p className="text-3xl font-bold text-green-600">
+          <h2 className="text-2xl font-bold text-green-700 mb-4">Total Donations</h2>
+          <p className="text-3xl font-bold text-green-700">
             {Number(userStats.totalDonations).toFixed(4)} ETH
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-600">DAO Status</h3>
-          <p className="text-3xl font-bold text-green-600">
+          <h2 className="text-2xl font-bold text-green-700 mb-4">DAO Status</h2>
+          <p className="text-3xl font-bold text-green-700">
             {userStats.isDaoMember ? 'Member' : 'Not Member'}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-600">Votes Cast</h3>
-          <p className="text-3xl font-bold text-green-600">{userStats.votesParticipated}</p>
+          <h2 className="text-2xl font-bold text-green-700 mb-4">Votes Cast</h2>
+          <p className="text-3xl font-bold text-green-700">{userStats.votesParticipated}</p>
         </div>
       </div>
 
       {/* Activity Feed */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold mb-6">Activity History</h2>
+        <h2 className="text-2xl font-bold text-green-700 mb-6">Activity History</h2>
         {activities.length > 0 ? (
           <div className="space-y-4">
             {activities.map((activity, index) => (
@@ -209,7 +211,7 @@ export default function Profile() {
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-4">No activities yet</p>
+          <p className="text-gray-600 text-center py-4">No activities yet</p>
         )}
       </div>
     </div>

@@ -1,51 +1,59 @@
+'use client';
+
 import { useState } from 'react';
 import { ethers } from 'ethers';
 import { useContract } from './useContract';
+import { useNetwork, useSwitchNetwork } from 'wagmi';
+import { arbitrumSepolia } from 'wagmi/chains';
 import contractConfig from '../utils/contractConfig.json';
 
 export function useContractOperations() {
-    const { contracts } = useContract();
+    const { contracts, signer, isConnected } = useContract();
+    const { chain } = useNetwork();
+    const { switchNetwork } = useSwitchNetwork();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
     const clearError = () => setError(null);
 
-    const handleError = (err) => {
-        console.error('Contract operation error:', err);
-        if (err.code === 'ACTION_REJECTED') {
-            setError('Transaction was rejected by user');
-        } else if (err.code === 'INSUFFICIENT_FUNDS') {
-            setError('Insufficient funds to complete the transaction');
-        } else {
-            setError(err.message || 'An error occurred during the transaction');
-        }
-        setLoading(false);
-        return false;
-    };
-
-    const joinDAO = async () => {
-        if (!contracts?.dao) {
-            setError('DAO contract not initialized');
+    const checkNetworkAndConnection = () => {
+        console.log('Checking network and connection:', { isConnected, chainId: chain?.id });
+        
+        if (!isConnected) {
+            setError('Please connect your wallet to continue');
             return false;
         }
-
-        setLoading(true);
-        clearError();
-
-        try {
-            const minStakeAmount = ethers.parseEther(contractConfig.contracts.DAO.minStakeAmount);
-            const tx = await contracts.dao.joinDAO({ value: minStakeAmount });
-            await tx.wait();
-            setLoading(false);
-            return true;
-        } catch (err) {
-            return handleError(err);
+        if (chain?.id !== arbitrumSepolia.id) {
+            setError(`Please switch to ${arbitrumSepolia.name} network to continue`);
+            if (switchNetwork) {
+                switchNetwork(arbitrumSepolia.id);
+            }
+            return false;
         }
+        if (!signer) {
+            setError('Wallet connection not initialized. Please try again.');
+            return false;
+        }
+        return true;
     };
 
     const listProject = async (name, description) => {
+        console.log('listProject called with:', { name, description });
+        
+        if (!checkNetworkAndConnection()) {
+            console.log('Network check failed');
+            return false;
+        }
+        
         if (!contracts?.projectListing) {
-            setError('ProjectListing contract not initialized');
+            console.log('Contract not initialized');
+            setError('Contract not initialized. Please refresh the page.');
+            return false;
+        }
+
+        // Validate inputs
+        if (!name?.trim() || !description?.trim()) {
+            setError('Project name and description are required');
             return false;
         }
 
@@ -53,17 +61,50 @@ export function useContractOperations() {
         clearError();
 
         try {
+            // Convert subscription amount to Wei
             const subscriptionFee = ethers.parseEther(contractConfig.contracts.ProjectListing.subscriptionFee);
-            const tx = await contracts.projectListing.listProject(name, description, { value: subscriptionFee });
-            await tx.wait();
+            console.log('Subscription fee:', subscriptionFee.toString());
+
+            console.log('Attempting to list project with params:', {
+                name: name.trim(),
+                description: description.trim(),
+                subscriptionFee: subscriptionFee.toString()
+            });
+
+            // Send transaction with subscription fee
+            const tx = await contracts.projectListing.listProject(
+                name.trim(), 
+                description.trim(),
+                { 
+                    value: subscriptionFee
+                }
+            );
+
+            console.log('Transaction sent:', tx.hash);
+            const receipt = await tx.wait();
+            console.log('Transaction confirmed:', receipt);
             setLoading(false);
             return true;
         } catch (err) {
-            return handleError(err);
+            console.error('Contract error:', err);
+            
+            if (err.message?.includes('insufficient funds')) {
+                setError('You do not have enough ETH. Make sure you have enough to cover both the subscription amount and gas fees.');
+            } else if (err.code === 'ACTION_REJECTED') {
+                setError('Transaction was rejected. Please try again.');
+            } else if (err.message?.includes('network changed')) {
+                setError('Network changed. Please switch back to Arbitrum Sepolia and try again.');
+            } else {
+                setError(err.message || 'Failed to list project. Please try again.');
+            }
+            setLoading(false);
+            return false;
         }
     };
 
-    const vote = async (projectId, voteValue) => {
+    // DAO Functions
+    const joinDAO = async () => {
+        if (!checkNetworkAndConnection()) return false;
         if (!contracts?.dao) {
             setError('DAO contract not initialized');
             return false;
@@ -73,18 +114,36 @@ export function useContractOperations() {
         clearError();
 
         try {
-            const tx = await contracts.dao.vote(projectId, voteValue);
-            await tx.wait();
+            // Convert stake amount to Wei
+            const stakeAmount = ethers.parseEther(contractConfig.contracts.DAO.minStakeAmount);
+            console.log('Joining DAO with stake:', stakeAmount.toString());
+
+            const tx = await contracts.dao.joinDAO({ value: stakeAmount });
+            console.log('Join DAO transaction sent:', tx.hash);
+            
+            const receipt = await tx.wait();
+            console.log('Join DAO transaction confirmed:', receipt);
+            
             setLoading(false);
             return true;
         } catch (err) {
-            return handleError(err);
+            console.error('Error joining DAO:', err);
+            if (err.message?.includes('insufficient funds')) {
+                setError('You do not have enough ETH to stake and join the DAO');
+            } else if (err.code === 'ACTION_REJECTED') {
+                setError('Transaction was rejected. Please try again.');
+            } else {
+                setError(err.message || 'Failed to join DAO');
+            }
+            setLoading(false);
+            return false;
         }
     };
 
-    const donate = async (projectId, amount) => {
-        if (!contracts?.donate) {
-            setError('Donate contract not initialized');
+    const vote = async (projectId, voteInFavor) => {
+        if (!checkNetworkAndConnection()) return false;
+        if (!contracts?.dao) {
+            setError('DAO contract not initialized');
             return false;
         }
 
@@ -92,101 +151,112 @@ export function useContractOperations() {
         clearError();
 
         try {
-            // First check if the project is approved
-            const project = await contracts.projectListing.projects(projectId);
-            if (!project.isApproved) {
-                setError('This project is not approved for donations');
+            console.log('Voting on project:', { projectId, voteInFavor });
+            
+            const address = await signer.getAddress();
+            
+            // First check if user is a member
+            const memberStatus = await contracts.dao.isMember(address);
+            if (!memberStatus) {
+                setError('You must be a DAO member to vote');
                 setLoading(false);
                 return false;
             }
 
-            if (!project.isListed) {
-                setError('This project is no longer listed');
+            // Check if already voted
+            const hasVoted = await contracts.dao.hasVoted(projectId, address);
+            if (hasVoted) {
+                setError('You have already voted on this project');
                 setLoading(false);
                 return false;
             }
 
-            // Check if the subscription is still valid
-            if (project.subscriptionEndTime * 1000 < Date.now()) {
-                setError('Project subscription has expired');
+            // Check if project exists and is not processed
+            const projectRequest = await contracts.dao.projectRequests(projectId);
+            if (projectRequest.isProcessed) {
+                setError('This project request has already been processed');
                 setLoading(false);
                 return false;
             }
-
-            const valueInWei = ethers.parseEther(amount.toString());
-            const tx = await contracts.donate.donateToProject(projectId, { value: valueInWei });
-            await tx.wait();
+            
+            const tx = await contracts.dao.voteOnProject(projectId, voteInFavor);
+            console.log('Vote transaction sent:', tx.hash);
+            
+            // Wait for transaction with timeout
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Transaction confirmation timeout')), 60000)
+            );
+            
+            const receipt = await Promise.race([
+                tx.wait(),
+                timeoutPromise
+            ]);
+            
+            console.log('Vote transaction confirmed:', receipt);
+            
             setLoading(false);
             return true;
         } catch (err) {
-            return handleError(err);
-        }
-    };
-
-    const donateToProject = async (projectId, amount) => {
-        if (!contracts?.donate) {
-            setError('Donate contract not initialized');
+            console.error('Error voting:', err);
+            if (err.message === 'Transaction confirmation timeout') {
+                setError('Transaction is taking longer than expected. Please check your wallet for status.');
+            } else if (err.code === 'ACTION_REJECTED') {
+                setError('Transaction was rejected. Please try again.');
+            } else if (err.message?.includes('Already voted')) {
+                setError('You have already voted on this project');
+            } else if (err.message?.includes('Not a DAO member')) {
+                setError('You must be a DAO member to vote');
+            } else if (err.message?.includes('Project request already processed')) {
+                setError('This project request has already been processed');
+            } else {
+                setError(err.message || 'Failed to vote');
+            }
+            setLoading(false);
             return false;
         }
+    };
 
-        setLoading(true);
-        clearError();
-
+    // Additional DAO functions
+    const getDAOMembers = async () => {
+        if (!contracts?.dao) return [];
         try {
-            const donationAmount = ethers.parseEther(amount.toString());
-            const tx = await contracts.donate.donateToProject(projectId, {
-                value: donationAmount
-            });
-            await tx.wait();
-            setLoading(false);
-            return true;
+            const members = await contracts.dao.getDAOMembers();
+            return members;
         } catch (err) {
-            return handleError(err);
+            console.error('Error getting DAO members:', err);
+            return [];
         }
     };
 
-    const getApprovedProjects = async () => {
-        if (!contracts?.projectListing) {
-            setError('ProjectListing contract not initialized');
-            return [];
-        }
-
+    const getTotalStaked = async () => {
+        if (!contracts?.dao) return ethers.parseEther('0');
         try {
-            const approvedIds = await contracts.projectListing.getApprovedProjects();
-            const projects = [];
-
-            for (const id of approvedIds) {
-                try {
-                    const project = await contracts.projectListing.projects(id);
-                    if (project.isListed && project.isApproved) {
-                        projects.push({
-                            id: id.toString(),
-                            name: project.name,
-                            description: project.description,
-                            owner: project.owner,
-                            totalDonations: ethers.formatEther(project.totalDonations),
-                            subscriptionEndTime: new Date(Number(project.subscriptionEndTime) * 1000).toLocaleDateString()
-                        });
-                    }
-                } catch (err) {
-                    console.error(`Error loading project ${id}:`, err);
-                }
-            }
-
-            return projects;
+            const total = await contracts.dao.getTotalStaked();
+            return total;
         } catch (err) {
-            console.error('Error loading approved projects:', err);
-            return [];
+            console.error('Error getting total staked:', err);
+            return ethers.parseEther('0');
+        }
+    };
+
+    const getQuorum = async () => {
+        if (!contracts?.dao) return 0;
+        try {
+            const quorum = await contracts.dao.getQuorum();
+            return Number(quorum);
+        } catch (err) {
+            console.error('Error getting quorum:', err);
+            return 0;
         }
     };
 
     return {
-        joinDAO,
         listProject,
+        joinDAO,
         vote,
-        donate,
-        donateToProject,
-        getApprovedProjects,
+        getDAOMembers,
+        getTotalStaked,
+        getQuorum,
         loading,
         error,
         clearError

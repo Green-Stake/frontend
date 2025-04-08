@@ -3,19 +3,80 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 236, 253, 245;
+  --background-end-rgb: 236, 253, 245;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
   }
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+  min-height: 100vh;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* RainbowKit Custom Styles */
+[data-rk] {
+  --rk-blurs-modalOverlay: blur(8px);
+  --rk-fonts-body: system-ui, sans-serif;
+  --rk-radii-modal: 1rem;
+  --rk-radii-menuButton: 0.75rem;
+  --rk-radii-connectButton: 0.75rem;
+  --rk-colors-accentColor: #22c55e;
+  --rk-colors-connectButtonBackground: #22c55e;
+  --rk-colors-connectButtonText: #ffffff;
+  --rk-colors-modalTextSecondary: #9ca3af;
+}
+
+.rainbow-kit-connect button {
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  padding: 0.625rem 1rem !important;
+  background: #059669 !important;
+  border-radius: 0.5rem !important;
+  color: white !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.rainbow-kit-connect button:hover {
+  background: #047857 !important;
+}
+
+/* Smooth transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Custom scrollbar for Webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(var(--background-start-rgb));
+}
+
+::-webkit-scrollbar-thumb {
+  background: #22c55e;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #16a34a;
 }

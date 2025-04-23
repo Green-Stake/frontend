@@ -20,13 +20,11 @@ export default function DonatePage() {
         try {
             setTxStatus('Loading approved projects...');
             
-            // Get approved project IDs
             const approvedIds = await contracts.projectListing.getApprovedProjects();
             console.log('Approved IDs:', approvedIds.toString());
             
             const projectsData = [];
             
-            // Load details for each approved project
             for (const id of approvedIds) {
                 try {
                     const project = await contracts.projectListing.getProject(id);
@@ -47,7 +45,6 @@ export default function DonatePage() {
                 }
             }
             
-            console.log('Loaded projects:', projectsData);
             setProjects(projectsData);
             setTxStatus('');
             
@@ -78,7 +75,7 @@ export default function DonatePage() {
             if (success) {
                 setTxStatus('Donation successful! Thank you for your contribution.');
                 setDonationAmount('');
-                await loadApprovedProjects(); // Refresh project list
+                await loadApprovedProjects();
             }
         } catch (err) {
             console.error('Error making donation:', err);
@@ -87,10 +84,10 @@ export default function DonatePage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 py-12">
+        <div className="min-h-screen bg-light-gray py-12">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center">
-                    <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+                    <h1 className="text-3xl font-extrabold text-forest-green sm:text-4xl">
                         Support Green Projects
                     </h1>
                     <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
@@ -125,7 +122,7 @@ export default function DonatePage() {
                     </div>
                 )}
 
-                <div className="mt-12 grid gap-8 sm:grid-cols-1 lg:grid-cols-2">
+                <div className="mt-12 grid gap-8 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                     {projects.map((project) => (
                         <div key={project.id} className="bg-white overflow-hidden shadow rounded-lg divide-y divide-gray-200">
                             <div className="px-4 py-5 sm:p-6">
@@ -156,14 +153,12 @@ export default function DonatePage() {
                                             placeholder="Amount in ETH"
                                             value={donationAmount}
                                             onChange={(e) => handleDonationAmountChange(e, project.id)}
-                                            className="flex-1 min-w-0 block w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                                            className="flex-1 min-w-0 block w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-forest-green focus:border-forest-green sm:text-sm"
                                         />
                                         <button
                                             onClick={() => handleDonate(project.id)}
                                             disabled={loading || !donationAmount}
-                                            className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
-                                                loading || !donationAmount ? 'opacity-50 cursor-not-allowed' : ''
-                                            }`}
+                                            className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-forest-green hover:bg-forest-green-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-forest-green ${loading || !donationAmount ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         >
                                             {loading ? 'Processing...' : 'Donate'}
                                         </button>

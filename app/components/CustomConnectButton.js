@@ -38,7 +38,7 @@ export function CustomConnectButton() {
                   <button
                     onClick={openConnectModal}
                     type="button"
-                    className="inline-flex items-center rounded-lg bg-green-500 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-green-600 focus:outline-none focus:ring-4 focus:ring-green-300 dark:hover:bg-green-600 dark:focus:ring-green-800"
+                    className="px-6 py-2 rounded-full bg-gradient-to-r from-green-400 to-green-700 text-white font-semibold text-sm shadow-md hover:brightness-110 transition-all"
                   >
                     Connect Wallet
                   </button>
@@ -50,7 +50,7 @@ export function CustomConnectButton() {
                   <button
                     onClick={openChainModal}
                     type="button"
-                    className="inline-flex items-center rounded-lg bg-red-500 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-red-600 focus:outline-none focus:ring-4 focus:ring-red-300"
+                    className="px-6 py-2 rounded-full bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold text-sm shadow-md hover:brightness-110 transition-all"
                   >
                     Wrong network
                   </button>
@@ -58,22 +58,18 @@ export function CustomConnectButton() {
               }
 
               return (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <button
                     onClick={openChainModal}
                     type="button"
-                    className="inline-flex items-center rounded-lg bg-green-100 px-4 py-2 text-center text-sm font-medium text-green-800 hover:bg-green-200 focus:outline-none focus:ring-4 focus:ring-green-300 dark:bg-green-800 dark:text-green-100 dark:hover:bg-green-700"
+                    className="flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium text-green-200 bg-green-900 hover:bg-green-800 transition-all"
                   >
-                    {chain.hasIcon && (
-                      <div className="mr-2 h-4 w-4">
-                        {chain.iconUrl && (
-                          <img
-                            alt={chain.name ?? 'Chain icon'}
-                            src={chain.iconUrl}
-                            className="h-4 w-4"
-                          />
-                        )}
-                      </div>
+                    {chain.hasIcon && chain.iconUrl && (
+                      <img
+                        alt={chain.name ?? 'Chain icon'}
+                        src={chain.iconUrl}
+                        className="w-4 h-4 mr-1"
+                      />
                     )}
                     {chain.name}
                   </button>
@@ -81,7 +77,7 @@ export function CustomConnectButton() {
                   <button
                     onClick={openAccountModal}
                     type="button"
-                    className="inline-flex items-center rounded-lg bg-green-500 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-green-600 focus:outline-none focus:ring-4 focus:ring-green-300 dark:hover:bg-green-600 dark:focus:ring-green-800"
+                    className="px-4 py-2 rounded-full bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-all shadow-md"
                   >
                     {account.displayName}
                     {account.displayBalance
@@ -97,3 +93,4 @@ export function CustomConnectButton() {
     </ConnectButton.Custom>
   );
 }
+

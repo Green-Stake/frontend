@@ -4,6 +4,13 @@ import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { useContract } from '../hooks/useContract';
 import { formatEther } from '@ethersproject/units';
+import { motion } from 'framer-motion';
+import {
+  UserPlus,
+  Gift,
+  CheckCircle,
+  Vote,
+} from 'lucide-react';
 
 export default function Profile() {
   const { address, isConnected } = useAccount();
@@ -31,16 +38,12 @@ export default function Profile() {
     if (!contracts?.projectListing || !contracts?.dao || !contracts?.donate) return;
 
     try {
-      // Get user's DAO membership status
       const memberData = await contracts.dao.members(address);
-      
-      // Track user stats
       let listedProjects = 0;
       let totalDonations = BigInt(0);
       let votesCount = 0;
       const userActivities = [];
 
-      // Get all project IDs
       const projectIds = [];
       let index = 0;
       while (true) {
@@ -53,12 +56,10 @@ export default function Profile() {
         }
       }
 
-      // Check projects for ownership, votes, and donations
       for (const projectId of projectIds) {
         try {
           const project = await contracts.projectListing.getProject(projectId);
-          
-          // Check if user is project owner
+
           if (project.owner.toLowerCase() === address.toLowerCase()) {
             listedProjects++;
             userActivities.push({
@@ -69,7 +70,6 @@ export default function Profile() {
             });
           }
 
-          // Check if user has voted on this project
           try {
             const hasVoted = await contracts.dao.hasVoted(projectId, address);
             if (hasVoted) {
@@ -81,11 +81,8 @@ export default function Profile() {
                 timestamp: Date.now()
               });
             }
-          } catch (err) {
-            console.error(`Error checking vote for project ${projectId}:`, err);
-          }
+          } catch {}
 
-          // Get user's donations for this project
           try {
             let index = 0;
             while (true) {
@@ -102,20 +99,14 @@ export default function Profile() {
                   });
                 }
                 index++;
-              } catch (err) {
-                // Break when we've reached the end of the array
+              } catch {
                 break;
               }
             }
-          } catch (err) {
-            console.error(`Error getting donations for project ${projectId}:`, err);
-          }
-        } catch (err) {
-          console.error(`Error loading project ${projectId}:`, err);
-        }
+          } catch {}
+        } catch {}
       }
 
-      // Update user stats
       setUserStats({
         projectsListed: listedProjects,
         totalDonations: formatEther(totalDonations),
@@ -123,96 +114,107 @@ export default function Profile() {
         votesParticipated: votesCount
       });
 
-      // Sort activities by timestamp in descending order
       userActivities.sort((a, b) => b.timestamp - a.timestamp);
       setActivities(userActivities);
-
     } catch (err) {
       console.error('Error loading user data:', err);
     }
   };
 
-  // Handle initial loading state
-  if (!mounted || loading) {
-    return null;
-  }
+  if (!mounted || loading) return null;
 
   if (!isConnected) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-green-700 mb-4">Connect Your Wallet</h1>
-          <p className="text-gray-600">Please connect your wallet to view your profile.</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-green-600 via-gray-800 to-green-600 text-white">
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl font-bold">🔒 Connect Your Wallet</h1>
+          <p className="text-gray-400">Please connect your wallet to view your profile.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-green-700 mb-8">Profile</h1>
-
-      {/* User Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold text-green-700 mb-4">Projects Listed</h2>
-          <p className="text-3xl font-bold text-green-700">{userStats.projectsListed}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold text-green-700 mb-4">Total Donations</h2>
-          <p className="text-3xl font-bold text-green-700">
-            {Number(userStats.totalDonations).toFixed(4)} ETH
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold text-green-700 mb-4">DAO Status</h2>
-          <p className="text-3xl font-bold text-green-700">
-            {userStats.isDaoMember ? 'Member' : 'Not Member'}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold text-green-700 mb-4">Votes Cast</h2>
-          <p className="text-3xl font-bold text-green-700">{userStats.votesParticipated}</p>
-        </div>
-      </div>
-
-      {/* Activity Feed */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold text-green-700 mb-6">Activity History</h2>
-        {activities.length > 0 ? (
-          <div className="space-y-4">
-            {activities.map((activity, index) => (
-              <div key={index} className="border-b pb-4 last:border-b-0">
-                <div className="flex items-start">
-                  <div className={`w-2 h-2 mt-2 rounded-full mr-4 ${
-                    activity.type === 'DONATION' ? 'bg-green-500' :
-                    activity.type === 'PROJECT_LISTED' ? 'bg-blue-500' :
-                    'bg-purple-500'
-                  }`} />
-                  <div>
-                    <p className="text-gray-800">
-                      {activity.type === 'DONATION' && (
-                        <>Donated {Number(activity.amount).toFixed(4)} ETH to </>
-                      )}
-                      {activity.type === 'PROJECT_LISTED' && (
-                        <>Listed project: </>
-                      )}
-                      {activity.type === 'VOTED' && (
-                        <>Voted on project: </>
-                      )}
-                      <span className="font-semibold">{activity.projectName}</span>
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {new Date(activity.timestamp).toLocaleString()}
-                    </p>
-                  </div>
+    <div className="min-h-screen px-4 py-10 bg-gradient-to-b from-green-200 via-gray-500 to-green-50 text-white rounded-xl">
+      <div className="max-w-5xl mx-auto space-y-10">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[ 
+            {
+              label: 'Projects Listed',
+              value: userStats.projectsListed,
+              icon: <UserPlus size={32} />,
+            },
+            {
+              label: 'Total Donations',
+              value: `${Number(userStats.totalDonations).toFixed(4)} ETH`,
+              icon: <Gift size={32} />,
+            },
+            {
+              label: 'DAO Status',
+              value: userStats.isDaoMember ? 'Member' : 'Not Member',
+              icon: <CheckCircle size={32} />,
+            },
+            {
+              label: 'Votes Cast',
+              value: userStats.votesParticipated,
+              icon: <Vote size={32} />,
+            },
+          ].map((stat, idx) => (
+            <motion.div
+              key={idx}
+              className="bg-black/40 border border-white rounded-2xl p-6 backdrop-blur-lg shadow-2xl"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+            >
+              <div className="flex items-center gap-4">
+                <div className="text-green-500">{stat.icon}</div>
+                <div>
+                  <h2 className="text-lg font-semibold">{stat.label}</h2>
+                  <p className="text-2xl font-bold">{stat.value}</p>
                 </div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-600 text-center py-4">No activities yet</p>
-        )}
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Activity Feed */}
+        <motion.div
+          className="bg-black/40 border border-white rounded-2xl p-6 backdrop-blur-lg shadow-2xl"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <h2 className="text-2xl font-bold mb-6 text-green-400">📜 Activity History</h2>
+          {activities.length > 0 ? (
+            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+              {activities.map((activity, index) => (
+                <motion.div
+                  key={index}
+                  className="border-b border-white/20 pb-3"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.03 }}
+                >
+                  <p className="text-white">
+                    {activity.type === 'DONATION' && (
+                      <>💸 Donated <span className="text-green-300">{Number(activity.amount).toFixed(4)} ETH</span> to </>
+                    )}
+                    {activity.type === 'PROJECT_LISTED' && <>📁 Listed project: </>}
+                    {activity.type === 'VOTED' && <>🗳️ Voted on project: </>}
+                    <span className="font-semibold">{activity.projectName}</span>
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    {new Date(activity.timestamp).toLocaleString()}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-400 text-center">No activities yet</p>
+          )}
+        </motion.div>
       </div>
     </div>
   );

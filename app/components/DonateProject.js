@@ -6,6 +6,7 @@ export default function DonateProject({ projectId }) {
     const [amount, setAmount] = useState('');
     const [project, setProject] = useState(null);
     const [donations, setDonations] = useState([]);
+    const [successMessage, setSuccessMessage] = useState('');
 
     useEffect(() => {
         loadProjectData();
@@ -22,25 +23,36 @@ export default function DonateProject({ projectId }) {
         e.preventDefault();
         const success = await donateToProject(projectId, amount);
         if (success) {
+            setSuccessMessage('Donation successful!');
             setAmount('');
-            await loadProjectData(); // Refresh data
+            await loadProjectData();
+            setTimeout(() => setSuccessMessage(''), 4000);
         }
     };
 
-    if (!project) return <div>Loading project...</div>;
+    if (!project) return <div className="text-center py-10 text-gray-600">Loading project...</div>;
 
     return (
         <div className="max-w-2xl mx-auto p-6">
             <div className="bg-white shadow rounded-lg p-6 mb-6">
-                <h2 className="text-2xl font-bold mb-4">{project.name}</h2>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">{project.name}</h2>
                 <p className="text-gray-600 mb-4">{project.description}</p>
                 <p className="text-sm text-gray-500">
-                    Total Donations: {project.totalDonations} ETH
+                    Total Donations:{' '}
+                    <span className="font-semibold text-green-600">
+                        {Number(project.totalDonations).toLocaleString()} ETH
+                    </span>
                 </p>
             </div>
 
+            {successMessage && (
+                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 text-sm">
+                    {successMessage}
+                </div>
+            )}
+
             {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm">
                     {error}
                 </div>
             )}
@@ -73,21 +85,23 @@ export default function DonateProject({ projectId }) {
 
             <div className="bg-white shadow rounded-lg p-6">
                 <h3 className="text-xl font-semibold mb-4">Donation History</h3>
-                <div className="space-y-4">
-                    {donations.map((donation, index) => (
-                        <div key={index} className="border-b pb-4">
-                            <p className="text-sm text-gray-600">
-                                From: {donation.donor}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                                Amount: {donation.amount} ETH
-                            </p>
-                            <p className="text-sm text-gray-500">
-                                {donation.timestamp.toLocaleString()}
-                            </p>
-                        </div>
-                    ))}
-                </div>
+                {donations.length === 0 ? (
+                    <p className="text-sm text-gray-500">No donations yet. Be the first to donate!</p>
+                ) : (
+                    <div className="space-y-4">
+                        {donations.map((donation, index) => (
+                            <div key={index} className="border-b pb-4">
+                                <p className="text-sm text-gray-600">From: {donation.donor}</p>
+                                <p className="text-sm text-gray-600">
+                                    Amount: {Number(donation.amount).toLocaleString()} ETH
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                    {new Date(donation.timestamp).toLocaleString()}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );

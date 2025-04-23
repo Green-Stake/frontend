@@ -19,11 +19,9 @@ export default function DonateInterface() {
         if (!contracts?.projectListing) return;
 
         try {
-            // Get approved project IDs
             const approvedIds = await contracts.projectListing.getApprovedProjects();
             const projectsData = [];
 
-            // Load details for each approved project
             for (const id of approvedIds) {
                 try {
                     const project = await contracts.projectListing.projects(id);
@@ -78,31 +76,31 @@ export default function DonateInterface() {
         try {
             const success = await donate(selectedProject.id, donationAmount);
             if (success) {
-                setTxStatus('Donation successful!');
+                setTxStatus('🎉 Donation successful!');
                 setDonationAmount('');
                 setSelectedProject(null);
                 await loadApprovedProjects();
             } else {
-                setTxStatus('Donation failed. Please check the error message above.');
+                setTxStatus('❌ Donation failed. Please check the error message above.');
             }
         } catch (err) {
             console.error('Error making donation:', err);
-            setTxStatus('Donation failed. Please try again.');
+            setTxStatus('❌ Donation failed. Please try again.');
         }
     };
 
     return (
-        <div className="max-w-4xl mx-auto p-6">
-            <h2 className="text-2xl font-bold mb-6">Donate to Projects</h2>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Donate to Projects</h2>
 
             {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm">
                     {error}
                 </div>
             )}
 
             {txStatus && (
-                <div className={`mb-4 p-4 rounded-md ${
+                <div className={`mb-4 p-4 rounded-md text-sm transition-all duration-300 ${
                     txStatus.includes('successful')
                         ? 'bg-green-100 text-green-700'
                         : txStatus.includes('failed') || txStatus.includes('Please')
@@ -113,52 +111,49 @@ export default function DonateInterface() {
                 </div>
             )}
 
-            <div className="bg-white shadow rounded-lg p-6 mb-6">
-                <h3 className="text-xl font-semibold mb-4">Make a Donation</h3>
-                <form onSubmit={handleDonate} className="space-y-4">
+            {/* Project Selection & Donation */}
+            <div className="bg-white shadow rounded-lg p-6 mb-10 transition duration-300 ease-in-out">
+                <h3 className="text-xl font-semibold mb-4 text-gray-700">Make a Donation</h3>
+                <form onSubmit={handleDonate} className="space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Select Project
-                        </label>
-                        <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Select Project</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {approvedProjects.map((project) => (
                                 <div
                                     key={project.id}
                                     onClick={() => handleProjectSelect(project)}
-                                    className={`p-4 rounded-lg cursor-pointer border ${
+                                    className={`p-4 rounded-lg cursor-pointer transition-all duration-300 border shadow-sm hover:shadow-md ${
                                         selectedProject?.id === project.id
-                                            ? 'border-blue-500 bg-blue-50'
+                                            ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-300'
                                             : 'border-gray-200 hover:border-blue-300'
                                     }`}
                                 >
-                                    <h4 className="font-medium">{project.name}</h4>
-                                    <p className="text-sm text-gray-600">{project.description}</p>
-                                    <div className="mt-2 text-sm text-gray-500">
-                                        <p>Total Donations: {project.totalDonations} ETH</p>
-                                    </div>
+                                    <h4 className="font-medium text-gray-800">{project.name}</h4>
+                                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">{project.description}</p>
+                                    <p className="mt-2 text-xs text-gray-500">Total Donations: {project.totalDonations} ETH</p>
                                 </div>
                             ))}
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Donation Amount (ETH)
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Donation Amount (ETH)</label>
                         <input
                             type="text"
                             value={donationAmount}
                             onChange={handleDonationAmountChange}
                             placeholder="0.0"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                         />
                     </div>
 
                     <button
                         type="submit"
                         disabled={loading || !selectedProject || !donationAmount}
-                        className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                            (loading || !selectedProject || !donationAmount) ? 'opacity-50 cursor-not-allowed' : ''
+                        className={`w-full flex justify-center py-2 px-4 rounded-md text-sm font-medium text-white transition duration-300 ${
+                            (loading || !selectedProject || !donationAmount)
+                                ? 'bg-blue-300 cursor-not-allowed'
+                                : 'bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
                         }`}
                     >
                         {loading ? 'Processing...' : 'Donate'}
@@ -166,22 +161,22 @@ export default function DonateInterface() {
                 </form>
             </div>
 
+            {/* Approved Projects Display */}
             <div className="bg-white shadow rounded-lg p-6">
-                <h3 className="text-xl font-semibold mb-4">Approved Projects</h3>
-                <div className="space-y-4">
-                    {approvedProjects.map((project) => (
-                        <div key={project.id} className="border rounded-lg p-4">
-                            <h4 className="text-lg font-medium">{project.name}</h4>
-                            <p className="text-gray-600 mt-1">{project.description}</p>
-                            <div className="mt-2 text-sm text-gray-500">
-                                <p>Owner: {project.owner}</p>
-                                <p>Total Donations: {project.totalDonations} ETH</p>
-                                <p>Subscription End: {project.subscriptionEndTime}</p>
+                <h3 className="text-xl font-semibold mb-6 text-gray-700">Approved Projects</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {approvedProjects.length > 0 ? approvedProjects.map((project) => (
+                        <div key={project.id} className="border rounded-lg p-4 shadow-sm transition hover:shadow-md">
+                            <h4 className="text-lg font-semibold text-gray-800">{project.name}</h4>
+                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">{project.description}</p>
+                            <div className="mt-3 text-xs text-gray-500 space-y-1">
+                                <p><span className="font-medium">Owner:</span> {project.owner.slice(0, 6)}...{project.owner.slice(-4)}</p>
+                                <p><span className="font-medium">Total Donations:</span> {project.totalDonations} ETH</p>
+                                <p><span className="font-medium">Subscription Ends:</span> {project.subscriptionEndTime}</p>
                             </div>
                         </div>
-                    ))}
-                    {approvedProjects.length === 0 && (
-                        <p className="text-gray-500 text-center">No approved projects available</p>
+                    )) : (
+                        <p className="text-center text-gray-500 col-span-full">No approved projects available.</p>
                     )}
                 </div>
             </div>

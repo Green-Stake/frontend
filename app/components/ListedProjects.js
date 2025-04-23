@@ -20,7 +20,6 @@ export default function ListedProjects() {
         if (!contracts?.projectListing || !contracts?.dao) return;
 
         try {
-            // Get the array of project IDs
             const projectIds = [];
             let index = 0;
             while (true) {
@@ -29,7 +28,6 @@ export default function ListedProjects() {
                     projectIds.push(Number(projectId));
                     index++;
                 } catch (err) {
-                    // Break when we've reached the end of the array
                     break;
                 }
             }
@@ -40,30 +38,25 @@ export default function ListedProjects() {
                 try {
                     const project = await contracts.projectListing.getProject(projectId);
                     const daoProjectRequest = await contracts.dao.projectRequests(projectId);
-                    
-                    // Check if project is approved in both contracts
                     const projectListingApproval = await contracts.projectListing.getProject(projectId);
-                    
+
                     if (project.isListed) {
-                        // Get project donations from the mapping
                         let totalDonationsAmount = BigInt(0);
                         let index = 0;
-                        
+
                         while (true) {
                             try {
                                 const donation = await contracts.donate.projectDonations(projectId, index);
                                 totalDonationsAmount += BigInt(donation.amount.toString());
                                 index++;
                             } catch (err) {
-                                // Break when we've reached the end of the array
                                 break;
                             }
                         }
-                        
-                        // Convert BigInt to string for display
+
                         const totalDonations = formatEther(totalDonationsAmount);
                         const subscriptionEndTime = Number(project.subscriptionEndTime) * 1000;
-                        
+
                         projectsArray.push({
                             id: projectId,
                             name: project.name,
@@ -109,7 +102,6 @@ export default function ListedProjects() {
             await donateToProject(projectId, donationAmount);
             setTxStatus('Donation successful!');
             
-            // Clear donation amount and reload projects
             setProjects(projects.map(project => 
                 project.id === projectId 
                     ? { ...project, donationAmount: '' }
@@ -123,10 +115,10 @@ export default function ListedProjects() {
     };
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold text-green-700">Listed Projects</h1>
-                <Link href="/list" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+                <h1 className="text-2xl sm:text-4xl font-bold text-green-600">Listed Projects</h1>
+                <Link href="/list" className="bg-gradient-to-r from-green-400 via-green-500 to-green-600 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-2xl transition duration-300">
                     List a New Project
                 </Link>
             </div>
@@ -136,35 +128,31 @@ export default function ListedProjects() {
                     No projects listed yet.
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {projects.map(project => {
-                        // Get video for this project
                         let videoUrl = null;
                         try {
                             const videos = JSON.parse(localStorage.getItem('projectVideos') || '{}');
-                            console.log('Looking for video for project:', project.name);
                             const videoData = videos[project.name];
                             if (videoData?.url) {
                                 videoUrl = videoData.url;
-                                console.log('Found video URL:', videoUrl);
                             }
                         } catch (err) {
                             console.error('Error loading video:', err);
                         }
                         
                         return (
-                            <div key={project.id} className="bg-white rounded-lg shadow overflow-hidden">
+                            <div key={project.id} className="bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden">
                                 {videoUrl ? (
-                                    <div className="w-full relative" style={{ paddingTop: '56.25%' }}>
+                                    <div className="relative pt-[56.25%] w-full">
                                         <video 
-                                            className="absolute top-0 left-0 w-full h-full object-cover"
+                                            className="absolute top-0 left-0 w-full h-full object-cover rounded-t-3xl"
                                             controls
                                             src={videoUrl}
                                             autoPlay={false}
                                             muted={true}
                                             playsInline={true}
                                             onError={(e) => {
-                                                console.error('Video error:', e);
                                                 e.target.style.display = 'none';
                                                 e.target.parentElement.style.display = 'none';
                                             }}
@@ -173,17 +161,15 @@ export default function ListedProjects() {
                                         </video>
                                     </div>
                                 ) : (
-                                    <div className="w-full relative bg-gray-100" style={{ paddingTop: '56.25%' }}>
-                                        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-gray-400">
-                                            No video available
-                                        </div>
+                                    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-gray-400 bg-gray-100 rounded-t-3xl">
+                                        No video available
                                     </div>
                                 )}
                                 <div className="p-6">
-                                    <h3 className="text-xl font-bold mb-2 break-words text-green-700">{project.name}</h3>
-                                    <p className="text-gray-600 mb-4 break-words whitespace-pre-wrap">{project.description}</p>
+                                    <h3 className="text-2xl sm:text-3xl font-bold text-green-700 mb-2">{project.name}</h3>
+                                    <p className="text-sm sm:text-base text-gray-600 whitespace-pre-wrap">{project.description}</p>
                                     
-                                    <div className="space-y-3 text-base">
+                                    <div className="space-y-3 text-base mt-4">
                                         <p className="break-all">
                                             <span className="font-semibold text-green-700">Owner:</span>{' '}
                                             <span className="text-gray-600">{project.owner}</span>
@@ -220,16 +206,14 @@ export default function ListedProjects() {
                                                     step="0.01"
                                                     value={project.donationAmount}
                                                     onChange={(e) => handleDonationChange(project.id, e.target.value)}
-                                                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                                                    className="w-full px-4 py-2 sm:py-3 sm:px-5 border border-green-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-400 transition"
                                                     placeholder="Enter amount in ETH"
                                                 />
                                             </div>
                                             <button
                                                 onClick={() => handleDonate(project.id, project.donationAmount)}
                                                 disabled={loading}
-                                                className={`w-full bg-green-600 text-white py-2 rounded font-semibold ${
-                                                    loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'
-                                                }`}
+                                                className={`w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-xl font-semibold transition transform duration-300 hover:bg-gradient-to-l hover:scale-105 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             >
                                                 {loading ? 'Processing...' : 'Donate'}
                                             </button>
@@ -249,9 +233,7 @@ export default function ListedProjects() {
             )}
 
             {txStatus && (
-                <div className={`text-center mt-4 ${
-                    txStatus.includes('Error') ? 'text-red-500' : 'text-green-500'
-                }`}>
+                <div className={`text-center mt-4 ${txStatus.includes('Error') ? 'text-red-500' : 'text-green-500'}`}>
                     {txStatus}
                 </div>
             )}
